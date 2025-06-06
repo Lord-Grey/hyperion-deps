@@ -103,7 +103,7 @@ ExternalProject_Add(libftdi1
 	PREFIX				${CMAKE_CURRENT_BINARY_DIR}/libftdi1
 	GIT_REPOSITORY		git://developer.intra2net.com/libftdi
 	GIT_TAG				de9f01ece34d2fe6e842e0250a38f4b16eda2429
-	PATCH_COMMAND		git reset --hard HEAD && git apply ${CMAKE_CURRENT_SOURCE_DIR}/patch/libftdi1.diff
+	PATCH_COMMAND		git reset --hard HEAD && git apply ${CMAKE_CURRENT_SOURCE_DIR}/patch/libftdi/linkage.diff
 	CMAKE_ARGS			-DSTATICLIBS:BOOL=ON # Build LibFTDI as static library
 						-DEXAMPLES:BOOL=OFF #  Disable build of LibFTDI example programs
 						-DFTDI_EEPROM:BOOL=OFF # Disable building ftdi_eeprom
@@ -240,6 +240,13 @@ FetchContent_MakeAvailable(flatbuffers)
 # Protocol Buffers
 #=============================================================================
 
+# protobuf patch
+find_package(Git REQUIRED)
+execute_process(
+	COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace ${HYPERION_DIR}/dependencies/patch/protobuf/xpaclri.diff
+	WORKING_DIRECTORY ${HYPERION_DIR}/dependencies/external/protobuf
+)
+		
 cmake_path(SET ProtocolBuffers ${HYPERION_DIR}/dependencies/external/protobuf)
 FetchContent_Declare(protobuf SOURCE_DIR ${ProtocolBuffers})
 
