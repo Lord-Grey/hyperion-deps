@@ -37,6 +37,9 @@ jobs:
           { distribution: debian, codename: bookworm, description: Debian Bookworm (Raspberry Pi 2),              architecture: [ armv7, linux/arm/v7 ], platform: rpi, qt_version: '6' },
           { distribution: debian, codename: bookworm, description: Debian Bookworm (Raspberry Pi 3/4/5 & Zero 2), architecture: [ arm64, linux/arm64  ], platform: rpi, qt_version: '6' }
         ]
+        target_lookup: [
+          { 'arm64': 'arm64', 'armv6': 'armv6l', 'armv7': 'armv7l' }
+        ]
 
     steps:
       - name: ⬇ Checkout
@@ -61,13 +64,14 @@ jobs:
             -v "${{ github.workspace }}:/source:rw" \
             -w "/source" \
             ghcr.io/hyperion-project/${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} \
-            /bin/bash -c "cmake --preset linux-${{ inputs.build_type }} -DHYPERION_DIR=/source/hyperion -DPLATFORM=${{ matrix.os.platform }} &&
+            /bin/bash -c "cmake --preset linux-${{ inputs.build_type }} -DHYPERION_DIR=/source/hyperion -DPLATFORM=${{ matrix.os.platform }} ${{ env.CUSTOM_SYSTEM_PROCESSOR }} &&
             cmake --build --preset linux-${{ inputs.build_type }} --target install --parallel $(nproc) &&
             cp -a /source/build/install/. /deploy/ 2>/dev/null"
         env:
           DOCKER_IMAGE: ${{ matrix.os.distribution }}
           DOCKER_TAG: ${{ matrix.os.codename }}${{ matrix.os.qt_version == '6' && '-qt6' || '' }}
           ENTRYPOINT: ${{ matrix.os.architecture[0] != 'amd64' && '--entrypoint /usr/bin/env' || '' }}
+          CUSTOM_SYSTEM_PROCESSOR: ${{ matrix.os.architecture[0] != 'amd64' && format('-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR={0}', matrix.target_lookup[format('{0}', matrix.os.architecture[0])]) || '' }}
 
       - name: 📦 Upload
         if: ${{ inputs.upload_artifact }}
