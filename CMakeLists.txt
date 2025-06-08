@@ -257,7 +257,7 @@ set(protobuf_BUILD_TESTS OFF CACHE INTERNAL "Build protobuf with tests")
 set(protobuf_WITH_ZLIB OFF CACHE INTERNAL "Build protobuf with zlib support")
 
 # Disable build of libupb
-set(protobuf_BUILD_LIBUPB OFF CACHE INTERNAL "Build libupb")
+set(protobuf_BUILD_LIBUPB ON CACHE INTERNAL "Build libupb")
 
 # Build abeil (3rd party sub-module) with C++ version requirements
 set(ABSL_PROPAGATE_CXX_STD ON CACHE INTERNAL "Build abseil-cpp with C++ version requirements propagated")
