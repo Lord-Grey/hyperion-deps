@@ -248,7 +248,6 @@ endif()
 cmake_path(SET ProtocolBuffers ${HYPERION_DIR}/dependencies/external/protobuf)
 FetchContent_Declare(protobuf
 	SOURCE_DIR ${ProtocolBuffers}
-	PATCH_COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/patch/protobuf.diff
  )
 
 # Enable ProtoBuf verbose mode
