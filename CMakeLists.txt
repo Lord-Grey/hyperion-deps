@@ -275,20 +275,59 @@ endif()
 
 FetchContent_MakeAvailable(protobuf)
 
-# Suppress Protobuf warnings
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-	foreach(target libprotobuf libprotobuf-lite libprotoc protoc)
+# Suppress Protobuf, Abseil and UPB warnings
+function(suppress_target_warnings dir)
+	get_property(subdirs DIRECTORY "${dir}" PROPERTY SUBDIRECTORIES)
+	foreach(subdir ${subdirs})
+		suppress_target_warnings("${subdir}")
+	endforeach()
+	get_property(targets DIRECTORY "${dir}" PROPERTY BUILDSYSTEM_TARGETS)
+	foreach(target ${targets})
 		if(TARGET ${target})
-			target_compile_options(${target} PRIVATE -Wno-deprecated-declarations -Wno-psabi)
+			get_target_property(target_type ${target} TYPE)
+			if(NOT target_type STREQUAL "INTERFACE_LIBRARY")
+				if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+					target_compile_options(${target} PRIVATE
+						-Wno-deprecated-declarations
+						-Wno-psabi
+						$<$<COMPILE_LANGUAGE:C>:-Wno-pointer-to-int-cast>
+						$<$<COMPILE_LANGUAGE:C>:-Wno-int-to-pointer-cast>
+					)
+				elseif(MSVC)
+					target_compile_options(${target} PRIVATE /wd4996 /wd4311 /wd4302)
+				endif()
+			endif()
 		endif()
 	endforeach()
-elseif(MSVC)
-	foreach(target libprotobuf libprotobuf-lite libprotoc protoc)
-		if(TARGET ${target})
-			target_compile_options(${target} PRIVATE /wd4996)
-		endif()
-	endforeach()
+endfunction()
+
+if(DEFINED protobuf_SOURCE_DIR)
+	suppress_target_warnings("${protobuf_SOURCE_DIR}")
 endif()
+if(DEFINED abseil-cpp_SOURCE_DIR)
+	suppress_target_warnings("${abseil-cpp_SOURCE_DIR}")
+endif()
+if(EXISTS "${ProtocolBuffers}")
+	suppress_target_warnings("${ProtocolBuffers}")
+endif()
+
+foreach(target libprotobuf libprotobuf-lite libprotoc protoc libupb upb absl)
+	if(TARGET ${target})
+		get_target_property(target_type ${target} TYPE)
+		if(NOT target_type STREQUAL "INTERFACE_LIBRARY")
+			if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+				target_compile_options(${target} PRIVATE
+					-Wno-deprecated-declarations
+					-Wno-psabi
+					$<$<COMPILE_LANGUAGE:C>:-Wno-pointer-to-int-cast>
+					$<$<COMPILE_LANGUAGE:C>:-Wno-int-to-pointer-cast>
+				)
+			elseif(MSVC)
+				target_compile_options(${target} PRIVATE /wd4996 /wd4311 /wd4302)
+			endif()
+		endif()
+	endif()
+endforeach()
 
 #=============================================================================
 # mbedTLS
