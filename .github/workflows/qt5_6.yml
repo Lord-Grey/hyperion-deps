@@ -64,7 +64,7 @@ jobs:
             -v "${{ github.workspace }}/deploy:/deploy" \
             -v "${{ github.workspace }}:/source:rw" \
             -w "/source" \
-            ghcr.io/hyperion-project/${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} \
+            ghcr.io/lord-grey/${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} \
             /bin/bash -c "
               git config --global --add safe.directory /source &&
               cmake --preset linux-${{ inputs.build_type }} -DHYPERION_DIR=/source/hyperion -DPLATFORM=${{ matrix.os.platform }} &&
