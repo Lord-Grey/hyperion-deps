@@ -285,7 +285,7 @@ function(suppress_target_warnings dir)
 	foreach(target ${targets})
 		if(TARGET ${target})
 			get_target_property(target_type ${target} TYPE)
-			if(NOT target_type STREQUAL "INTERFACE_LIBRARY")
+			if(target_type MATCHES "^(STATIC_LIBRARY|SHARED_LIBRARY|MODULE_LIBRARY|OBJECT_LIBRARY|EXECUTABLE)$")
 				if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 					target_compile_options(${target} PRIVATE
 						-Wno-deprecated-declarations
@@ -314,7 +314,7 @@ endif()
 foreach(target libprotobuf libprotobuf-lite libprotoc protoc libupb upb absl)
 	if(TARGET ${target})
 		get_target_property(target_type ${target} TYPE)
-		if(NOT target_type STREQUAL "INTERFACE_LIBRARY")
+		if(target_type MATCHES "^(STATIC_LIBRARY|SHARED_LIBRARY|MODULE_LIBRARY|OBJECT_LIBRARY|EXECUTABLE)$")
 			if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 				target_compile_options(${target} PRIVATE
 					-Wno-deprecated-declarations
