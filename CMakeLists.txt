@@ -276,10 +276,18 @@ endif()
 FetchContent_MakeAvailable(protobuf)
 
 # Suppress Protobuf warnings
-if(CMAKE_C_COMPILER_ID MATCHES "GNU" AND TARGET libprotobuf AND TARGET libprotoc AND TARGET absl)
-	target_compile_options(libprotobuf PRIVATE -Wno-deprecated-declarations -Wno-psabi)
-	target_compile_options(libprotoc PRIVATE -Wno-deprecated-declarations -Wno-psabi)
-	target_compile_options(absl PRIVATE -Wno-deprecated-declarations -Wno-psabi)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+	foreach(target libprotobuf libprotobuf-lite libprotoc protoc)
+		if(TARGET ${target})
+			target_compile_options(${target} PRIVATE -Wno-deprecated-declarations -Wno-psabi)
+		endif()
+	endforeach()
+elseif(MSVC)
+	foreach(target libprotobuf libprotobuf-lite libprotoc protoc)
+		if(TARGET ${target})
+			target_compile_options(${target} PRIVATE /wd4996)
+		endif()
+	endforeach()
 endif()
 
 #=============================================================================
@@ -292,12 +300,15 @@ FetchContent_Declare(mbedtls SOURCE_DIR ${mbedTLS})
 # Build mbedTLS as static library
 set(USE_SHARED_MBEDTLS_LIBRARY ${BUILD_SHARED_LIBS} CACHE INTERNAL "Disable mbedTLS shared libraries")
 set(USE_STATIC_MBEDTLS_LIBRARY !${BUILD_SHARED_LIBS} CACHE INTERNAL "Enable mbedTLS static libraries")
+set(USE_SHARED_TF_PSA_CRYPTO_LIBRARY ${BUILD_SHARED_LIBS} CACHE INTERNAL "Disable TF-PSA-Crypto shared libraries")
+set(USE_STATIC_TF_PSA_CRYPTO_LIBRARY !${BUILD_SHARED_LIBS} CACHE INTERNAL "Enable TF-PSA-Crypto static libraries")
 
 # Disable build of mbedTLS tests
 set(ENABLE_TESTING OFF CACHE INTERNAL "Build mbedTLS tests")
 
 # Disable fatal warnings
 set(MBEDTLS_FATAL_WARNINGS OFF CACHE INTERNAL "Compiler warnings treated as errors")
+set(TF_PSA_CRYPTO_FATAL_WARNINGS OFF CACHE INTERNAL "Compiler warnings treated as errors")
 
 # Disable build of mbedTLS program building
 set(ENABLE_PROGRAMS OFF CACHE INTERNAL "Build mbedTLS programs")
@@ -308,8 +319,13 @@ set(DISABLE_PACKAGE_CONFIG_AND_INSTALL OFF CACHE INTERNAL "Disable package confi
 FetchContent_MakeAvailable(mbedtls)
 
 # Can be removed when the issue is resolved: https://github.com/Mbed-TLS/mbedtls/issues/9875
-if(CMAKE_C_COMPILER_ID MATCHES "GNU" AND TARGET mbedcrypto)
-	target_compile_options(mbedcrypto PRIVATE -fomit-frame-pointer)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU")
+	if(TARGET mbedcrypto)
+		target_compile_options(mbedcrypto PRIVATE -fomit-frame-pointer)
+	endif()
+	if(TARGET tfpsacrypto)
+		target_compile_options(tfpsacrypto PRIVATE -fomit-frame-pointer)
+	endif()
 endif()
 
 #=============================================================================
