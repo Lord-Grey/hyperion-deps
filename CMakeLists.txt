@@ -346,13 +346,17 @@ set(DISABLE_PACKAGE_CONFIG_AND_INSTALL OFF CACHE INTERNAL "Disable package confi
 FetchContent_MakeAvailable(mbedtls)
 
 # Can be removed when the issue is resolved: https://github.com/Mbed-TLS/mbedtls/issues/9875
+# Workaround for register constraint issues on 32-bit ARM in Debug builds
 if(CMAKE_C_COMPILER_ID MATCHES "GNU")
-	if(TARGET mbedcrypto)
-		target_compile_options(mbedcrypto PRIVATE -fomit-frame-pointer)
-	endif()
-	if(TARGET tfpsacrypto)
-		target_compile_options(tfpsacrypto PRIVATE -fomit-frame-pointer)
-	endif()
+    foreach(target mbedcrypto tfpsacrypto builtin)
+        if(TARGET ${target})
+            # -fomit-frame-pointer frees up a register (r7 / fp)
+            target_compile_options(${target} PRIVATE -fomit-frame-pointer)
+            
+            # Optionally force -O1 for Debug builds if -fomit-frame-pointer alone isn't enough:
+            # target_compile_options(${target} PRIVATE $<$<CONFIG:Debug>:-O1>)
+        endif()
+    endforeach()
 endif()
 
 #=============================================================================
